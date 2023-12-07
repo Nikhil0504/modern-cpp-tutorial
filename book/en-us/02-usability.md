@@ -153,7 +153,7 @@ actually returns a constant at runtime, which causes illegal production.
 C++11 provides `constexpr` to let the user explicitly declare that the function or
 object constructor will become a constant expression at compile time.
 This keyword explicitly tells the compiler that it should verify that `len_foo`
-should be a compile-time constant expression. Constant expression.
+should be a compile-time constant expression.
 
 In addition, the function of `constexpr` can use recursion:
 
@@ -214,14 +214,15 @@ int main() {
     }
 
     // should output: 1, 4, 3, 4. can be simplified using `auto`
-    for (std::vector<int>::iterator element = vec.begin(); element != vec.end(); ++element)
+    for (std::vector<int>::iterator element = vec.begin(); element != vec.end(); 
+        ++element)
         std::cout << *element << std::endl;
 }
 ```
 
 In the above code, we can see that the `itr` variable is defined in the scope of
 the entire `main()`, which causes us to rename the other when a variable need to traverse
-the entire `std::vectors` again. C++17 eliminates this limitation so that
+the entire `std::vector` again. C++17 eliminates this limitation so that
 we can do this in if(or switch):
 
 ```cpp
@@ -285,6 +286,8 @@ such as:
 ```cpp
 #include <initializer_list>
 #include <vector>
+#include <iostream>
+
 class MagicFoo {
 public:
     std::vector<int> vec;
@@ -299,7 +302,9 @@ int main() {
     MagicFoo magicFoo = {1, 2, 3, 4, 5};
 
     std::cout << "magicFoo: ";
-    for (std::vector<int>::iterator it = magicFoo.vec.begin(); it != magicFoo.vec.end(); ++it) std::cout << *it << std::endl;
+    for (std::vector<int>::iterator it = magicFoo.vec.begin(); 
+        it != magicFoo.vec.end(); ++it) 
+        std::cout << *it << std::endl;
 }
 ```
 
@@ -312,7 +317,8 @@ be used as a formal parameter of a normal function, for example:
 ```Cpp
 public:
     void foo(std::initializer_list<int> list) {
-            for (std::initializer_list<int>::iterator it = list.begin(); it != list.end(); ++it) vec.push_back(*it);
+        for (std::initializer_list<int>::iterator it = list.begin();
+            it != list.end(); ++it) vec.push_back(*it);
     }
 
 magicFoo.foo({6,7,8,9});
@@ -372,8 +378,8 @@ One of the most common and notable examples of type derivation using `auto` is t
 ```cpp
 // before C++11
 // cbegin() returns vector<int>::const_iterator
-// and therefore itr is type vector<int>::const_iterator
-for(vector<int>::const_iterator it = vec.cbegin(); itr != vec.cend(); ++it)
+// and therefore it is type vector<int>::const_iterator
+for(vector<int>::const_iterator it = vec.cbegin(); it != vec.cend(); ++it)
 ```
 
 When we have `auto`:
@@ -411,19 +417,20 @@ auto i = 5;              // i as int
 auto arr = new auto(10); // arr as int *
 ```
 
-> **Note**: `auto` cannot be used for function arguments, so the following
-> is not possible to compile (considering overloading,
-> we should use templates):
->
-> ```cpp
-> int add(auto x, auto y);
->
-> 2.6.auto.cpp:16:9: error: 'auto' not allowed in function prototype
-> int add(auto x, auto y) {
->         ^~~~
-> ```
->
-> In addition, `auto` cannot be used to derive array types:
+Since C++ 20, `auto` can even be used as function arguments. Consider
+the following example:
+
+```cpp
+int add(auto x, auto y) {
+    return x+y;
+}
+
+auto i = 5; // type int
+auto j = 6; // type int
+std::cout << add(i, j) << std::endl;
+```
+
+> **Note**: `auto` cannot be used to derive array types yet:
 >
 > ```cpp
 > auto auto_arr2[10] = {arr};   // illegal, can't infer array type
@@ -478,11 +485,11 @@ You may think that when we introduce `auto`, we have already mentioned that `aut
 ```cpp
 template<typename R, typename T, typename U>
 R add(T x, U y) {
-    return x+y
+    return x+y;
 }
 ```
 
-> Note: There is no difference between typename and class in the template parameter list. Before the keyword typename appears, class is used to define the template parameters. However, when defining a variable with [nested dependency type](http://en.cppreference.com/w/cpp/language/dependent_name#The_typename_disambiguator_for_dependent_names) in the template, you need to use typename to eliminate ambiguity.
+> Note: There is no difference between typename and class in the template parameter list. Before the keyword typename appears, class is used to define the template parameters. However, when defining a variable with [nested dependency type](https://en.cppreference.com/w/cpp/language/dependent_name#The_typename_disambiguator_for_dependent_names) in the template, you need to use typename to eliminate ambiguity.
 
 Such code is very ugly because the programmer must explicitly
 indicate the return type when using this template function.
@@ -541,7 +548,7 @@ std::cout << "q: " << q << std::endl;
 
 > To understand it you need to know the concept of parameter forwarding
 > in C++, which we will cover in detail in the
-> [Language Runtime Hardening](./03-runtime.md) chapter,
+> [Language Runtime Enhancements](./03-runtime.md) chapter,
 > and you can come back to the contents of this section later.
 
 In simple terms, `decltype(auto)` is mainly used to derive
@@ -706,28 +713,6 @@ using TrueDarkMagic = MagicType<std::vector<T>, std::string>;
 
 int main() {
     TrueDarkMagic<bool> you;
-}
-```
-
-### Default template parameters
-
-We may have defined an addition function:
-
-```cpp
-template<typename T, typename U>
-auto add(T x, U y) -> decltype(x+y) {
-    return x+y;
-}
-```
-
-However, when used, it is found that to use add, you must specify the type of its template parameters each time.
-
-A convenience is provided in C++11 to specify the default parameters of the template:
-
-```cpp
-template<typename T = int, typename U = int>
-auto add(T x, U y) -> decltype(x+y) {
-    return x+y;
 }
 ```
 
@@ -986,7 +971,7 @@ C++11 introduces the two keywords `override` and `final` to prevent this from ha
 
 ### override
 
-When overriding a virtual function, introducing the `override` keyword will explicitly tell the compiler to overload, and the compiler will check if the base function has such a virtual function, otherwise it will not compile:
+When overriding a virtual function, introducing the `override` keyword will explicitly tell the compiler to overload, and the compiler will check if the base function has such a virtual function with consistent function signature, otherwise it will not compile:
 
 ```cpp
 struct Base {
@@ -1067,7 +1052,9 @@ And we want to get the value of the enumeration value, we will have to explicitl
 ```cpp
 #include <iostream>
 template<typename T>
-std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
+std::ostream& operator<<(
+    typename std::enable_if<std::is_enum<T>::value,
+        std::ostream>::type& stream, const T& e)
 {
     return stream << static_cast<typename std::underlying_type<T>::type>(e);
 }
@@ -1123,4 +1110,4 @@ This section introduces the enhancements to language usability in modern C++, wh
 
 ## Licenses
 
-<a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-nd/4.0/88x31.png" /></a><br />This work was written by [Ou Changkun](https://changkun.de) and licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>. The code of this repository is open sourced under the [MIT license](../../LICENSE).
+<a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-nd/4.0/88x31.png" /></a><br />This work was written by [Ou Changkun](https://changkun.de) and licensed under a <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>. The code of this repository is open sourced under the [MIT license](../../LICENSE).
